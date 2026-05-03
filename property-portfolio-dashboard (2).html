@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio OS — National Property Research</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0b0c0e;--surface:#13151a;--surface2:#1a1d24;--surface3:#21252f;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);
+  --text:#e9e7e1;--muted:#6e6c66;
+  --accent:#b8f050;--accent2:#50b8f0;--accent3:#f050b8;
+  --warn:#f0b850;--danger:#f05050;--success:#50d4a0;
+  --font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;
+  --r:10px;--rl:16px;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:14px;line-height:1.6;min-height:100vh;}
+.nav{position:sticky;top:0;z-index:500;background:rgba(11,12,14,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;gap:1rem;height:50px;}
+.nav-brand{font-family:var(--font-d);font-weight:800;font-size:12px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;white-space:nowrap;flex-shrink:0;}
+.nav-tabs{display:flex;gap:0;flex:1;overflow-x:auto;scrollbar-width:none;}
+.nav-tabs::-webkit-scrollbar{display:none;}
+.nav-tab{padding:0 11px;height:50px;display:flex;align-items:center;font-size:12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-b);}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0;}
+.btn{padding:5px 12px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:var(--font-b);cursor:pointer;transition:background .15s;white-space:nowrap;}
+.btn:hover{background:var(--surface3);}
+.btn-primary{background:var(--accent);color:#0b0c0e;border-color:var(--accent);font-weight:600;}
+.btn-primary:hover{background:#caf570;}
+.btn-sm{padding:3px 9px;font-size:11px;}
+.btn-danger{background:rgba(240,80,80,.15);color:var(--danger);border-color:rgba(240,80,80,.3);}
+.btn-info{background:rgba(80,184,240,.12);color:var(--accent2);border-color:rgba(80,184,240,.25);}
+.page{display:none;padding:1.5rem;max-width:1300px;margin:0 auto;}
+.page.active{display:block;}
+.page-title{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:3px;}
+.page-sub{color:var(--muted);font-size:13px;margin-bottom:1.5rem;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem 1.5rem;}
+.card-title{font-family:var(--font-d);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;}
+.card-accent{border-color:rgba(184,240,80,.2);}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media(max-width:960px){.g4{grid-template-columns:repeat(2,1fr);}.g3{grid-template-columns:repeat(2,1fr);}.g2{grid-template-columns:1fr;}}
+.sec{margin-bottom:1.25rem;}
+.stat{padding:1.25rem 1.5rem;}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase;}
+.stat-value{font-family:var(--font-d);font-size:26px;font-weight:700;line-height:1;}
+.stat-delta{font-size:12px;color:var(--muted);margin-top:4px;}
+.fg{margin-bottom:.875rem;}
+.fl{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase;}
+.fi,.fs,.ft{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font-b);font-size:13px;padding:7px 11px;outline:none;transition:border-color .15s;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent);}
+.fs option{background:#1a1d24;}
+.ft{resize:vertical;min-height:65px;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.03em;}
+.bg-go{background:rgba(80,212,160,.13);color:var(--success);border:1px solid rgba(80,212,160,.22);}
+.bg-warn{background:rgba(240,184,80,.13);color:var(--warn);border:1px solid rgba(240,184,80,.22);}
+.bg-stop{background:rgba(240,80,80,.13);color:var(--danger);border:1px solid rgba(240,80,80,.22);}
+.bg-info{background:rgba(80,184,240,.13);color:var(--accent2);border:1px solid rgba(80,184,240,.22);}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{text-align:left;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+.sp{display:inline-block;padding:2px 9px;border-radius:20px;font-family:var(--font-m);font-size:11px;font-weight:500;}
+.sp-hi{background:rgba(80,212,160,.13);color:var(--success);}
+.sp-mi{background:rgba(240,184,80,.13);color:var(--warn);}
+.sp-lo{background:rgba(240,80,80,.13);color:var(--danger);}
+.frow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.frow:last-child{border-bottom:none;}
+.fname{flex:1;font-size:12px;}
+.fbar-w{width:100px;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.fbar{height:100%;border-radius:2px;}
+.fnum{font-family:var(--font-m);font-size:11px;color:var(--muted);min-width:26px;text-align:right;}
+.radar{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ri{display:flex;flex-direction:column;gap:3px;}
+.rl{font-size:10px;color:var(--muted);}
+.rb{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.rf{height:100%;border-radius:2px;}
+.empty{text-align:center;padding:2.5rem;color:var(--muted);}
+.empty-icon{font-size:26px;margin-bottom:8px;opacity:.35;}
+.empty-title{font-family:var(--font-d);font-size:14px;margin-bottom:4px;color:var(--text);}
+.empty-sub{font-size:12px;}
+.nb{background:var(--surface2);border-radius:var(--r);padding:11px;font-size:12px;color:var(--muted);border-left:2px solid var(--accent);line-height:1.6;}
+.nb.warn{border-left-color:var(--warn);}
+.nb.info{border-left-color:var(--accent2);}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:800;align-items:center;justify-content:center;backdrop-filter:blur(5px);}
+.mo.open{display:flex;}
+.mc{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:1.75rem;width:100%;max-width:700px;max-height:92vh;overflow-y:auto;position:relative;}
+.mc-title{font-family:var(--font-d);font-size:17px;font-weight:700;margin-bottom:1.25rem;}
+.mc-close{position:absolute;top:1rem;right:1rem;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);width:26px;height:26px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.mc-close:hover{color:var(--text);}
+a.sl{display:flex;flex-direction:column;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;}
+a.sl:hover{opacity:.75;}
+a.sl:last-child{border-bottom:none;}
+a.sl .st{font-size:12px;font-weight:500;color:var(--accent2);}
+a.sl .sd{font-size:11px;color:var(--muted);margin-top:2px;}
+#map-container{height:440px;border-radius:var(--r);overflow:hidden;border:1px solid var(--border);}
+.leaflet-popup-content-wrapper{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;}
+.leaflet-popup-tip{background:var(--surface2);}
+.leaflet-popup-content{font-family:var(--font-b);font-size:12px;margin:10px 14px;}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted);}
+.ml-item{display:flex;align-items:center;gap:5px;}
+.ml-dot{width:10px;height:10px;border-radius:50%;}
+#report-view{display:none;}
+#report-view.show{display:block;}
+.report-body{background:#fff;color:#1a1a1a;padding:2.5rem;border-radius:var(--r);font-family:var(--font-b);}
+.report-body h1{font-family:var(--font-d);font-size:22px;font-weight:800;color:#0b0c0e;border-bottom:3px solid #b8f050;padding-bottom:8px;margin-bottom:1.5rem;}
+.report-body h2{font-family:var(--font-d);font-size:13px;font-weight:700;color:#0b0c0e;text-transform:uppercase;letter-spacing:.06em;margin:1.25rem 0 .6rem;border-left:3px solid #b8f050;padding-left:8px;}
+.report-body table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:12px;}
+.report-body th{background:#f4f4f4;padding:6px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#555;}
+.report-body td{padding:6px 10px;border-bottom:1px solid #eee;}
+.score-box{display:inline-block;padding:4px 14px;border-radius:20px;font-weight:700;font-size:15px;}
+.score-box-hi{background:#e8fce8;color:#1a7a3a;}
+.score-box-mi{background:#fff8e8;color:#7a5c1a;}
+.score-box-lo{background:#fce8e8;color:#7a1a1a;}
+.report-disclaimer{font-size:10px;color:#888;margin-top:1.5rem;border-top:1px solid #eee;padding-top:10px;}
+@media print{.nav,.nav-actions,.btn{display:none!important;}.report-body{padding:0;}}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ci:last-child{border-bottom:none;}
+.cn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:10px;flex-shrink:0;margin-top:1px;}
+.cl{font-size:12px;font-weight:500;margin-bottom:2px;}
+.cd{font-size:11px;color:var(--muted);line-height:1.5;}
+.acc-h{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--border);}
+.acc-h:hover{color:var(--accent);}
+.acc-title{font-size:13px;font-weight:500;}
+.acc-arrow{font-size:11px;color:var(--muted);transition:transform .2s;}
+.acc-body{display:none;padding:10px 0 4px;font-size:12px;color:var(--muted);line-height:1.6;}
+.acc-body.open{display:block;}
+.live-score-wrap{display:flex;align-items:center;gap:1.5rem;padding:10px 0;}
+.live-score-num{font-family:var(--font-d);font-size:52px;font-weight:800;line-height:1;min-width:70px;}
+.council-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.council-link{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);text-decoration:none;color:var(--text);font-size:12px;transition:border-color .15s;}
+.council-link:hover{border-color:var(--border2);color:var(--accent2);}
+.council-link-icon{font-size:14px;flex-shrink:0;}
+.ana-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;}
+.ana-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-decoration:none;color:inherit;display:block;transition:border-color .15s;}
+.ana-card:hover{border-color:var(--accent2);}
+.ana-card-name{font-size:12px;font-weight:500;color:var(--accent2);margin-bottom:3px;}
+.ana-card-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+.ana-card-badge{margin-top:5px;}
+.qa-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);margin-bottom:5px;}
+.qa-item-body{flex:1;min-width:0;}
+.qa-item-name{font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qa-item-meta{display:flex;gap:5px;margin-top:2px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand">Portfolio OS</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('suburb')">Suburb Research</button>
+    <button class="nav-tab" onclick="showPage('address')">Property Address</button>
+    <button class="nav-tab" onclick="showPage('infra')">Infrastructure</button>
+    <button class="nav-tab" onclick="showPage('map')">Map</button>
+    <button class="nav-tab" onclick="showPage('analytics')">Analytics</button>
+    <button class="nav-tab" onclick="showPage('framework')">Framework Guide</button>
+    <button class="nav-tab" onclick="showPage('sources')">Sources</button>
+  </div>
+  <div class="nav-actions">
+    <button class="btn" onclick="exportData()">Export JSON</button>
+    <button class="btn" onclick="importData()">Import JSON</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-title">Portfolio Dashboard</div>
+  <div class="page-sub">National infrastructure-led acquisition framework — all Australian states &amp; territories</div>
+  <div class="g4 sec">
+    <div class="card stat"><div class="stat-label">Suburbs tracked</div><div class="stat-value" id="s-total" style="color:var(--accent)">0</div><div class="stat-delta">Across all states</div></div>
+    <div class="card stat"><div class="stat-label">Properties tracked</div><div class="stat-value" id="s-props" style="color:var(--accent2)">0</div><div class="stat-delta">Specific addresses</div></div>
+    <div class="card stat"><div class="stat-label">Avg infra score</div><div class="stat-value" id="s-avg">—</div><div class="stat-delta">Out of 100</div></div>
+    <div class="card stat"><div class="stat-label">Projects tracked</div><div class="stat-value" id="s-proj" style="color:var(--warn)">0</div><div class="stat-delta">National pipeline</div></div>
+  </div>
+  <div class="g2 sec">
+    <div class="card"><div class="card-title">Score distribution</div><div id="chart-dist" style="position:relative;height:160px;"></div></div>
+    <div class="card"><div class="card-title">Suburbs by state</div><div id="chart-state"></div></div>
+  </div>
+  <div class="card sec"><div class="card-title">Top scored suburbs</div><div id="dash-top"><div class="empty"><div class="empty-icon">⬡</div><div class="empty-title">No suburbs tracked yet</div><div class="empty-sub">Use Suburb Research to begin</div></div></div></div>
+  <div class="card sec"><div class="card-title">Recent properties</div><div id="dash-props"><div class="empty"><div class="empty-sub">No properties tracked yet</div></div></div></div>
+</div>
+
+<!-- SUBURB RESEARCH -->
+<div class="page" id="page-suburb">
+  <div class="page-title">Suburb research</div>
+  <div class="page-sub">Score a suburb against the 5-layer national framework. Select state first to see relevant planning authority context.</div>
+  <div class="g2">
+    <div>
+      <div class="card sec">
+        <div class="card-title">Suburb details</div>
+        <div class="fg2">
+          <div class="fg"><label class="fl">Suburb name</label><input type="text" class="fi" id="f-suburb" placeholder="e.g. Woolloongabba"></div>
+          <div class="fg"><label class="fl">State</label>
+            <select class="fs" id="f-state" onchange="updateStateCtx()">
+              <option value="WA">Western Australia</option><option value="VIC">Victoria</option>
+              <option value="NSW">New South Wales</option><option value="QLD">Queensland</option>
+              <option value="SA">South Australia</option><option value="TAS">Tasmania</option>
+              <option value="ACT">ACT</option><option value="NT">Northern Territory</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg3">
+          <div class="fg"><label class="fl">Median price ($)</label><input type="number" class="fi" id="f-price" placeholder="650000"></div>
+          <div class="fg"><label class="fl">Annual growth (%)</label><input type="number" class="fi" id="f-growth" placeholder="10.1" step="0.1"></div>
+          <div class="fg"><label class="fl">Gross yield (%)</label><input type="number" class="fi" id="f-yield" placeholder="5.0" step="0.1"></div>
+        </div>
+        <div class="fg3">
+          <div class="fg"><label class="fl">Vacancy rate (%)</label><input type="number" class="fi" id="f-vacancy" placeholder="1.2" step="0.1"></div>
+          <div class="fg"><label class="fl">CBD distance (km)</label><input type="number" class="fi" id="f-cbd" placeholder="15"></div>
+          <div class="fg"><label class="fl">Property type</label>
+            <select class="fs" id="f-type"><option value="house">House</option><option value="unit">Unit / Apt</option><option value="townhouse">Townhouse</option></select>
+          </div>
+        </div>
+        <div class="fg"><label class="fl">Council / LGA</label><input type="text" class="fi" id="f-council" placeholder="e.g. Brisbane City Council" oninput="updateCouncilLinks()"></div>
+        <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="f-notes" placeholder="Key observations, agent insights..."></textarea></div>
+        <div id="state-ctx" class="nb info" style="font-size:11px;margin-top:4px;"></div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Analytics — open in browser</div>
+        <div class="nb warn" style="margin-bottom:10px;font-size:11px;">These links open the relevant data page for this suburb. Data must be read manually — automatic extraction is not possible due to site terms of service.</div>
+        <div class="ana-grid" id="analytics-links"></div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Council &amp; planning portals</div>
+        <div id="council-links"></div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Social &amp; affordable housing agencies</div>
+        <div class="council-grid">
+          <a class="council-link" href="https://www.homes.vic.gov.au/projects" target="_blank"><span class="council-link-icon">🏘</span><div><div style="font-weight:500;">Homes Victoria</div><div style="font-size:10px;color:var(--muted);">Big Housing Build map</div></div></a>
+          <a class="council-link" href="https://www.nsw.gov.au/about-nsw/housing-and-infrastructure-projects/social-building-projects" target="_blank"><span class="council-link-icon">🏘</span><div><div style="font-weight:500;">Homes NSW</div><div style="font-size:10px;color:var(--muted);">Social housing projects</div></div></a>
+          <a class="council-link" href="https://www.qld.gov.au/housing/social-housing" target="_blank"><span class="council-link-icon">🏘</span><div><div style="font-weight:500;">Housing QLD</div><div style="font-size:10px;color:var(--muted);">Queensland social housing</div></div></a>
+          <a class="council-link" href="https://renewalsa.sa.gov.au/projects" target="_blank"><span class="council-link-icon">🏘</span><div><div style="font-weight:500;">Renewal SA</div><div style="font-size:10px;color:var(--muted);">SA housing renewal</div></div></a>
+          <a class="council-link" href="https://www.housing.wa.gov.au" target="_blank"><span class="council-link-icon">🏘</span><div><div style="font-weight:500;">Housing Authority WA</div><div style="font-size:10px;color:var(--muted);">WA social housing</div></div></a>
+          <a class="council-link" href="https://www.infrastructure.gov.au/territories-regions-cities/territories/housing-australia-future-fund" target="_blank"><span class="council-link-icon">🏛</span><div><div style="font-weight:500;">Housing Australia (HAFF)</div><div style="font-size:10px;color:var(--muted);">Federal pipeline</div></div></a>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card sec">
+        <div class="card-title">Layer 1 — State infrastructure programme <span class="tag">20 pts</span></div>
+        <div class="fg"><label class="fl">Major state/federal project within 5km</label>
+          <select class="fs" id="s-sip" onchange="updateScore()">
+            <option value="0">No identified project</option>
+            <option value="5">Planned — announced, unfunded</option>
+            <option value="10">Committed — funded, in pipeline</option>
+            <option value="20">Active or recently completed major project</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Planning authority designation</label>
+          <select class="fs" id="s-wapc" onchange="updateScore()">
+            <option value="0">No special designation</option>
+            <option value="5">Local / district centre</option>
+            <option value="10">Major activity centre</option>
+            <option value="15">Strategic / metropolitan centre</option>
+            <option value="20">Strategic centre + active rezoning / TOD declared</option>
+          </select>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Layer 2 — Transit-oriented development <span class="tag">25 pts</span></div>
+        <div class="fg"><label class="fl">Proximity to completed / committed rapid transit</label>
+          <select class="fs" id="s-rail" onchange="updateScore()">
+            <option value="0">No rapid transit within 2km</option>
+            <option value="8">Station 800m–2km (existing)</option>
+            <option value="15">Within 800m of existing station</option>
+            <option value="20">Within 800m of new / upgraded station (opened ≤3 yrs)</option>
+            <option value="25">Declared TOD precinct / rezoning active within 800m</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Network connectivity improvement</label>
+          <select class="fs" id="s-conn" onchange="updateScore()">
+            <option value="0">Radial line only</option>
+            <option value="3">Improved bus / ferry interchange</option>
+            <option value="5">New cross-network connection</option>
+          </select>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Layer 3 — Urban renewal &amp; regeneration <span class="tag">20 pts</span></div>
+        <div class="fg"><label class="fl">State renewal agency active in suburb</label>
+          <select class="fs" id="s-regen" onchange="updateScore()">
+            <option value="0">No active regeneration program</option>
+            <option value="8">Adjacent to active renewal area</option>
+            <option value="14">Within declared renewal area</option>
+            <option value="20">Active program with confirmed public investment</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Major anchor investment nearby</label>
+          <select class="fs" id="s-anchor" onchange="updateScore()">
+            <option value="0">No major anchor</option>
+            <option value="5">Hospital, university, or stadium within 3km</option>
+            <option value="10">Multiple anchors / city deal zone</option>
+          </select>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Layer 4 — Supply constraint <span class="tag">20 pts</span></div>
+        <div class="fg"><label class="fl">Suburb type</label>
+          <select class="fs" id="s-supply" onchange="updateScore()">
+            <option value="0">Greenfield / masterplanned estate</option>
+            <option value="5">Outer ring established</option>
+            <option value="10">Middle ring established</option>
+            <option value="15">Inner established — limited new supply</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Vacancy rate context</label>
+          <select class="fs" id="s-vac" onchange="updateScore()">
+            <option value="0">Above 4% — oversupply risk</option>
+            <option value="2">3–4% — elevated</option>
+            <option value="3">2–3% — balanced</option>
+            <option value="5">Below 2% — tight</option>
+          </select>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Layer 5 — Employment diversity <span class="tag">15 pts</span></div>
+        <div class="fg"><label class="fl">Employment anchors within 5km</label>
+          <select class="fs" id="s-emp" onchange="updateScore()">
+            <option value="0">Single employer / residential only</option>
+            <option value="5">2 anchors</option>
+            <option value="10">3 anchors (health + retail + govt)</option>
+            <option value="15">4+ anchors (health, retail, govt, education, logistics)</option>
+          </select>
+        </div>
+      </div>
+      <div class="card card-accent sec">
+        <div class="card-title">Infrastructure score</div>
+        <div class="live-score-wrap">
+          <div><div class="live-score-num" id="live-score">0</div><div style="font-size:11px;color:var(--muted);">/ 100</div></div>
+          <div style="flex:1;">
+            <div class="radar">
+              <div class="ri"><div class="rl">Policy anchors</div><div class="rb"><div class="rf" id="rb1" style="width:0%;background:var(--accent)"></div></div></div>
+              <div class="ri"><div class="rl">TOD / Rail</div><div class="rb"><div class="rf" id="rb2" style="width:0%;background:var(--accent2)"></div></div></div>
+              <div class="ri"><div class="rl">Urban renewal</div><div class="rb"><div class="rf" id="rb3" style="width:0%;background:var(--accent3)"></div></div></div>
+              <div class="ri"><div class="rl">Supply</div><div class="rb"><div class="rf" id="rb4" style="width:0%;background:var(--warn)"></div></div></div>
+              <div class="ri"><div class="rl">Employment</div><div class="rb"><div class="rf" id="rb5" style="width:0%;background:var(--success)"></div></div></div>
+            </div>
+          </div>
+          <div id="score-badge"></div>
+        </div>
+        <div id="score-rec" style="font-size:11px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border);margin-top:4px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;"><button class="btn btn-primary" style="flex:1;" onclick="saveSuburb()">Save suburb</button><button class="btn" onclick="clearSuburbForm()">Clear</button></div>
+    </div>
+  </div>
+  <div class="card sec" style="margin-top:1rem;">
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+      <div style="font-family:var(--font-d);font-size:13px;font-weight:600;flex:1;">Saved suburbs</div>
+      <input type="text" class="fi" id="sub-search" placeholder="Search suburb..." style="max-width:200px;" oninput="renderSuburbTable()">
+      <select class="fs" id="sub-fs" style="max-width:120px;" onchange="renderSuburbTable()">
+        <option value="">All states</option><option value="WA">WA</option><option value="VIC">VIC</option>
+        <option value="NSW">NSW</option><option value="QLD">QLD</option><option value="SA">SA</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Suburb</th><th>State</th><th>Median</th><th>Growth</th><th>Yield</th><th>Vacancy</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead><tbody id="suburb-tbody"><tr><td colspan="9"><div class="empty"><div class="empty-sub">No suburbs yet</div></div></td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- PROPERTY ADDRESS -->
+<div class="page" id="page-address">
+  <div class="page-title">Property address tracker</div>
+  <div class="page-sub">Track specific properties. All analytics links are pre-built for the address — one click opens the relevant platform. Generate a PDF report from all entered data.</div>
+  <div class="g2 sec">
+    <div class="card">
+      <div class="card-title">Add / edit property</div>
+      <div class="fg"><label class="fl">Full street address</label><input type="text" class="fi" id="pa-address" placeholder="e.g. 42 Station Road, Armadale WA 6112"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Suburb</label><input type="text" class="fi" id="pa-suburb" placeholder="Armadale" oninput="updatePropUI()"></div>
+        <div class="fg"><label class="fl">State</label>
+          <select class="fs" id="pa-state" onchange="updatePropUI()">
+            <option value="WA">WA</option><option value="VIC">VIC</option><option value="NSW">NSW</option>
+            <option value="QLD">QLD</option><option value="SA">SA</option><option value="TAS">TAS</option><option value="ACT">ACT</option><option value="NT">NT</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg3">
+        <div class="fg"><label class="fl">Asking price ($)</label><input type="number" class="fi" id="pa-price" placeholder="680000"></div>
+        <div class="fg"><label class="fl">Land size (m²)</label><input type="number" class="fi" id="pa-land" placeholder="450"></div>
+        <div class="fg"><label class="fl">Year built</label><input type="number" class="fi" id="pa-year" placeholder="1995"></div>
+      </div>
+      <div class="fg3">
+        <div class="fg"><label class="fl">Bedrooms</label><input type="number" class="fi" id="pa-bed" placeholder="3"></div>
+        <div class="fg"><label class="fl">Bathrooms</label><input type="number" class="fi" id="pa-bath" placeholder="1"></div>
+        <div class="fg"><label class="fl">Garage</label><input type="number" class="fi" id="pa-garage" placeholder="1"></div>
+      </div>
+      <div class="fg"><label class="fl">Council / LGA</label><input type="text" class="fi" id="pa-council" placeholder="e.g. City of Armadale"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Last sale price ($)</label><input type="number" class="fi" id="pa-lastsale" placeholder="550000"></div>
+        <div class="fg"><label class="fl">Last sale date</label><input type="text" class="fi" id="pa-lastdate" placeholder="e.g. Mar 2022"></div>
+      </div>
+      <div class="fg"><label class="fl">Inspection / research notes</label><textarea class="ft" id="pa-notes" placeholder="Condition, agent feedback, comparable sales, street appeal..."></textarea></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveAddress()">Save property</button>
+        <button class="btn" onclick="clearAddressForm()">Clear</button>
+      </div>
+    </div>
+    <div>
+      <div class="card sec">
+        <div class="card-title">Property analytics — click to open</div>
+        <div class="nb warn" style="margin-bottom:10px;font-size:11px;">Links are pre-built for the address entered. Login may be required on PropTrack and CoreLogic. property.com.au and Domain show sale history free without login.</div>
+        <div id="prop-analytics-links"><div class="empty" style="padding:1rem;"><div class="empty-sub">Enter address and suburb above to generate links</div></div></div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">PropTrack resources</div>
+        <div class="ana-grid">
+          <a class="ana-card" href="https://www.proptrack.com.au/home-price-index/" target="_blank"><div class="ana-card-name">Home Price Index ↗</div><div class="ana-card-desc">Monthly national and capital city price movements</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+          <a class="ana-card" href="https://www.proptrack.com.au/insights-hub/market-reports/" target="_blank"><div class="ana-card-name">Market Reports Hub ↗</div><div class="ana-card-desc">Quarterly state and capital city reports</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+          <a class="ana-card" href="https://www.proptrack.com.au/insights-hub/" target="_blank"><div class="ana-card-name">Insights Hub ↗</div><div class="ana-card-desc">Research, forecasts, affordability data</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+          <a class="ana-card" href="https://www.proptrack.com.au/insights-hub/rental-report/" target="_blank"><div class="ana-card-name">Rental Report ↗</div><div class="ana-card-desc">National rental price index and vacancy</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Microburbs — suburb profile</div>
+        <div id="microburbs-link"><div class="empty" style="padding:.75rem;"><div class="empty-sub">Enter suburb above to generate link</div></div></div>
+      </div>
+      <div class="card card-accent sec">
+        <div class="card-title">Generate research report</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Compiles all entered data, analytics links, infrastructure context, and framework score into a formatted report. View on-page or download as PDF.</p>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="generateReport()" style="flex:1;">Generate report</button>
+          <button class="btn" onclick="printReport()">Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="report-view" class="sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;">Generated report</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="printReport()">Download PDF</button>
+        <button class="btn btn-sm" onclick="document.getElementById('report-view').classList.remove('show')">Close</button>
+      </div>
+    </div>
+    <div id="report-body" class="report-body"></div>
+  </div>
+  <div class="card sec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <div style="font-family:var(--font-d);font-size:13px;font-weight:600;">Tracked properties</div>
+      <input type="text" class="fi" id="addr-search" placeholder="Search address..." style="max-width:220px;" oninput="renderAddressTable()">
+    </div>
+    <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Address</th><th>State</th><th>Price</th><th>Beds/Bath</th><th>Last sale</th><th>Actions</th></tr></thead><tbody id="address-tbody"><tr><td colspan="6"><div class="empty"><div class="empty-sub">No properties tracked yet</div></div></td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- INFRASTRUCTURE -->
+<div class="page" id="page-infra">
+  <div class="page-title">Infrastructure projects</div>
+  <div class="page-sub">National pipeline — WA, VIC, NSW, QLD, SA plus social/affordable housing. Quick-add from the pre-loaded library or log your own projects.</div>
+  <div class="g2 sec">
+    <div class="card">
+      <div class="card-title">Log a project</div>
+      <div class="fg"><label class="fl">Project name</label><input type="text" class="fi" id="ip-name" placeholder="e.g. Cross River Rail — Woolloongabba Station"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">State</label>
+          <select class="fs" id="ip-state">
+            <option value="ALL">All states</option><option value="WA">WA</option><option value="VIC">VIC</option>
+            <option value="NSW">NSW</option><option value="QLD">QLD</option><option value="SA">SA</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Category</label>
+          <select class="fs" id="ip-cat">
+            <option value="Rail / Metro">Rail / Metro</option><option value="TOD Precinct">TOD Precinct</option>
+            <option value="Activity Centre">Activity Centre</option><option value="Urban Renewal">Urban Renewal</option>
+            <option value="Road / Freeway">Road / Freeway</option><option value="Health">Health</option>
+            <option value="Education">Education</option><option value="Social Housing">Social / Affordable Housing</option>
+            <option value="Olympics / Games">Olympics / Major Event</option><option value="Employment">Employment</option><option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Delivery stage</label>
+          <select class="fs" id="ip-stage">
+            <option value="Announced">Announced — unfunded</option><option value="Committed">Committed — funded</option>
+            <option value="Planning">Planning / EIS</option><option value="Construction">Under construction</option><option value="Complete">Complete</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Investment value</label>
+          <select class="fs" id="ip-value">
+            <option value="<$100M">&lt;$100M</option><option value="$100M–$500M">$100M–$500M</option>
+            <option value="$500M–$1B">$500M–$1B</option><option value="$1B–$5B">$1B–$5B</option>
+            <option value=">$5B">&gt;$5B</option><option value="Unknown">Unknown</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Suburbs affected (comma separated)</label><input type="text" class="fi" id="ip-suburbs" placeholder="e.g. Woolloongabba, South Brisbane, Kangaroo Point"></div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Expected completion</label><input type="text" class="fi" id="ip-completion" placeholder="2029, Q3 2027, TBC"></div>
+        <div class="fg"><label class="fl">Source URL</label><input type="text" class="fi" id="ip-url" placeholder="https://..."></div>
+      </div>
+      <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="ip-notes" placeholder="Property impact, timing risk, key details..."></textarea></div>
+      <div style="display:flex;gap:8px;"><button class="btn btn-primary" style="flex:1;" onclick="saveProject()">Save project</button><button class="btn" onclick="clearProjForm()">Clear</button></div>
+    </div>
+    <div>
+      <div class="card sec">
+        <div class="card-title">Quick-add from national library</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="btn btn-sm" onclick="setQA('ALL')" id="qa-ALL">All</button>
+          <button class="btn btn-sm" onclick="setQA('WA')" id="qa-WA">WA</button>
+          <button class="btn btn-sm" onclick="setQA('VIC')" id="qa-VIC">VIC</button>
+          <button class="btn btn-sm" onclick="setQA('NSW')" id="qa-NSW">NSW</button>
+          <button class="btn btn-sm" onclick="setQA('QLD')" id="qa-QLD">QLD</button>
+          <button class="btn btn-sm" onclick="setQA('SA')" id="qa-SA">SA</button>
+          <button class="btn btn-sm" onclick="setQA('SOCIAL')" id="qa-SOCIAL">Social Housing</button>
+        </div>
+        <div id="qa-list" style="max-height:380px;overflow-y:auto;"></div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Suburb impact overlap</div>
+        <div id="impact-panel"><div class="empty" style="padding:1rem;"><div class="empty-sub">Add suburbs and projects to see overlap</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card sec">
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">
+      <div style="font-family:var(--font-d);font-size:13px;font-weight:600;flex:1;">Tracked projects</div>
+      <input type="text" class="fi" id="ip-search" placeholder="Search..." style="max-width:200px;" oninput="renderProjTable()">
+      <select class="fs" id="ip-fs" style="max-width:120px;" onchange="renderProjTable()"><option value="">All states</option><option value="WA">WA</option><option value="VIC">VIC</option><option value="NSW">NSW</option><option value="QLD">QLD</option><option value="SA">SA</option></select>
+      <select class="fs" id="ip-fstage" style="max-width:140px;" onchange="renderProjTable()"><option value="">All stages</option><option value="Complete">Complete</option><option value="Construction">Construction</option><option value="Committed">Committed</option><option value="Planning">Planning</option><option value="Announced">Announced</option></select>
+      <select class="fs" id="ip-fcat" style="max-width:160px;" onchange="renderProjTable()"><option value="">All categories</option><option value="Rail / Metro">Rail / Metro</option><option value="Urban Renewal">Urban Renewal</option><option value="Social Housing">Social Housing</option><option value="Health">Health</option><option value="Olympics / Games">Olympics</option></select>
+    </div>
+    <div style="overflow-x:auto;"><table class="tbl"><thead><tr><th>Project</th><th>State</th><th>Category</th><th>Stage</th><th>Value</th><th>Key suburbs</th><th>Completion</th><th>Actions</th></tr></thead><tbody id="proj-tbody"><tr><td colspan="8"><div class="empty"><div class="empty-sub">No projects logged — use quick-add above</div></div></td></tr></tbody></table></div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="page" id="page-map">
+  <div class="page-title">Property &amp; infrastructure map</div>
+  <div class="page-sub">All tracked suburbs and infrastructure projects plotted on OpenStreetMap. Click pins for details. Scroll to zoom. Use Fit all to see your entire portfolio.</div>
+  <div class="g2 sec" style="align-items:start;">
+    <div>
+      <div class="card sec">
+        <div class="card-title">Map controls</div>
+        <div class="fg"><label class="fl">Jump to suburb / city</label>
+          <div style="display:flex;gap:8px;"><input type="text" class="fi" id="map-jump" placeholder="Brisbane, Melbourne CBD..." style="flex:1;"><button class="btn" onclick="jumpMap()">Go</button></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="toggleLayer('suburbs')">🏘 Suburbs</button>
+          <button class="btn btn-sm" onclick="toggleLayer('projects')">🔧 Projects</button>
+          <button class="btn btn-sm" onclick="toggleLayer('addresses')">📍 Properties</button>
+          <button class="btn btn-sm" onclick="fitAllMarkers()">Fit all</button>
+          <button class="btn btn-sm" onclick="loadMapMarkers()">Refresh</button>
+        </div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Map legend</div>
+        <div class="map-legend">
+          <div class="ml-item"><div class="ml-dot" style="background:#b8f050;"></div>Suburb (70+)</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#f0b850;"></div>Suburb (50–69)</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#f05050;"></div>Suburb (&lt;50)</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#50b8f0;"></div>Project (complete)</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#8050f0;"></div>Project (construction)</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#f050b8;"></div>Property address</div>
+        </div>
+        <div class="nb warn" style="margin-top:10px;font-size:11px;">Markers use Nominatim geocoding (OpenStreetMap). Suburb pins land at the suburb centroid. For precise project locations, use the source link in each popup. Geocoding is rate-limited — allow a few seconds after adding many items before refreshing the map.</div>
+      </div>
+      <div class="card sec">
+        <div class="card-title">Microburbs overlay</div>
+        <div class="nb info" style="font-size:11px;margin-bottom:8px;">Enter any suburb below to open its Microburbs liveability and demographic profile alongside the map.</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" class="fi" id="mb-suburb" placeholder="Suburb name..." style="flex:1;">
+          <select class="fs" id="mb-state" style="max-width:80px;"><option value="wa">WA</option><option value="vic">VIC</option><option value="nsw">NSW</option><option value="qld">QLD</option><option value="sa">SA</option></select>
+        </div>
+        <button class="btn btn-sm btn-info" onclick="openMicroburbs()" style="margin-top:8px;">Open Microburbs profile ↗</button>
+      </div>
+    </div>
+    <div><div id="map-container"></div></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="page" id="page-analytics">
+  <div class="page-title">Portfolio analytics</div>
+  <div class="page-sub">Framework performance across your national portfolio. Layer pass rates, state comparison, growth vs score correlation.</div>
+  <div class="g3 sec">
+    <div class="card"><div class="card-title">Layer pass rates</div><div id="ana-pass"><div class="empty" style="padding:1rem;"><div class="empty-sub">Add suburbs to see pass rates</div></div></div></div>
+    <div class="card"><div class="card-title">Score by state</div><div id="ana-state"><div class="empty" style="padding:1rem;"><div class="empty-sub">Add suburbs to see state breakdown</div></div></div></div>
+    <div class="card"><div class="card-title">Growth vs infra score</div><div id="ana-scatter"><div class="empty" style="padding:1rem;"><div class="empty-sub">Need 2+ suburbs with growth data</div></div></div></div>
+  </div>
+  <div class="card sec"><div class="card-title">Full score breakdown — all suburbs</div><div id="ana-table"><div class="empty"><div class="empty-sub">No suburbs tracked</div></div></div></div>
+  <div class="card sec">
+    <div class="card-title">Market data — quick access</div>
+    <div class="ana-grid">
+      <a class="ana-card" href="https://sqmresearch.com.au/graph_vacancy.php" target="_blank"><div class="ana-card-name">SQM Vacancy Rates ↗</div><div class="ana-card-desc">Suburb-level vacancy and listing volumes</div><div class="ana-card-badge"><span class="badge bg-go">Free tier</span></div></a>
+      <a class="ana-card" href="https://sqmresearch.com.au/weekly-series.php" target="_blank"><div class="ana-card-name">SQM Weekly Listings ↗</div><div class="ana-card-desc">Total listings and asking prices</div><div class="ana-card-badge"><span class="badge bg-go">Free tier</span></div></a>
+      <a class="ana-card" href="https://www.corelogic.com.au/consumer" target="_blank"><div class="ana-card-name">CoreLogic Consumer ↗</div><div class="ana-card-desc">Free suburb reports, property estimates</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+      <a class="ana-card" href="https://www.proptrack.com.au/home-price-index/" target="_blank"><div class="ana-card-name">PropTrack HPI ↗</div><div class="ana-card-desc">Monthly national home price index</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+      <a class="ana-card" href="https://www.microburbs.com.au" target="_blank"><div class="ana-card-name">Microburbs ↗</div><div class="ana-card-desc">Demographics, schools, transport, liveability</div><div class="ana-card-badge"><span class="badge bg-warn">Freemium</span></div></a>
+      <a class="ana-card" href="https://www.reiwa.com.au/the-wa-market/market-data/" target="_blank"><div class="ana-card-name">REIWA (WA) ↗</div><div class="ana-card-desc">WA median prices, yield, days on market</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+      <a class="ana-card" href="https://www.reiv.com.au/market-data" target="_blank"><div class="ana-card-name">REIV (VIC) ↗</div><div class="ana-card-desc">Victorian median prices and auction clearance</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+      <a class="ana-card" href="https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/residential-property-price-indexes-eight-capital-cities" target="_blank"><div class="ana-card-name">ABS RPPI ↗</div><div class="ana-card-desc">Quarterly residential price index, all capitals</div><div class="ana-card-badge"><span class="badge bg-go">Free</span></div></a>
+    </div>
+  </div>
+</div>
